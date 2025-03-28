@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Music Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #181818;
+            padding: 20px;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            font-size: 16px;
+            color: #bbb;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar-item:hover, .sidebar-item.active {
+            background-color: #282828;
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .now-playing {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .song-info {
+            display: flex;
+            align-items: center;
+        }
+
+        #album-art {
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            margin-right: 20px;
+            transition: transform 0.3s;
+        }
+
+        .song-details h2 {
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .song-details p {
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .control-btn {
+            background-color: #1db954;
+            color: white;
+            border: none;
+            padding: 12px;
+            margin: 0 10px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .control-btn:hover {
+            background-color: #1aa34a;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #333;
+            margin: 15px 0;
+            border-radius: 5px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .progress {
+            height: 100%;
+            width: 0;
+            background-color: #1db954;
+            border-radius: 5px;
+            transition: width 0.1s linear;
+        }
+
+        #playlist {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .playlist-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: #282828;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .playlist-item:hover, .playlist-item.active {
+            background-color: #383838;
+            color: #1db954;
+        }
+        #volume-slider{
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-item active">Home</div>
+        <div class="sidebar-item" id="search-button">Search</div>
+        <div class="sidebar-item" id="library-button">Your Library</div>
+    </div>
+
+    <div class="main-content">
+        <div class="now-playing">
+            <div class="song-info">
+                <img id="album-art" src="photos/placeholder.jpg" alt="Album Art">
+                <div class="song-details">
+                    <h2 id="song-title">Song Title</h2>
+                    <p id="song-artist">Artist Name</p>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="prev-btn" class="control-btn"><i class="fas fa-backward"></i></button>
+                <button id="play-pause-btn" class="control-btn"><i class="fas fa-play"></i></button>
+                <button id="next-btn" class="control-btn"><i class="fas fa-forward"></i></button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <ul id="playlist">
+            </ul>
+    </div>
+
+    <script>
+        const tracks = [
+            { title: "Kooch Na Karin", artist: "Fahad Mustafa & Mehwish Hayat", src: "music/Kooch Na Karin - 128.mp3", art: "photos/download.jpg" },
+            { title: "Chand tare tod lau", artist: "ABHIJEET", src: "music/Chand Tare Tod Lau  Lofi  Slowed + Reverb  Yes Boss । @Timoontouch  । SRK । Abhijit । - 128.mp3", art: "photos/Ab.jpg" },
+            { title: "Chaar kadam", artist: "SONU NIGAM", src: "music/Chaar Kadam - 128.mp3", art: "photos/fd4e75_995aec3e6ba244529d3305024f599e57~mv2.webp" },
+            { title: "Ammi", artist: "YO YO Honey Singh", src: "music/Ammi-Honey Singh (Raw Star show) - 128.mp3", art: "photos/Yo_Yo_Honey_Singh.png" },
+            { title: "Mere Naam Tu", artist: "Abhay Jodhpurkar", src: "music/Mere Naam Tu - 128.mp3", art: "photos/Abhay Jodhpurkar.jpg" },
+            { title: "AADAT", artist: "ATIF ASLAM", src: "music/atif-aslam--kunal-khemu--kalyug--sayeed-q--emraan-hashmi.mp3", art: "photos/yYecsdok-atif-aslam.jpg" },
+            { title: "RAABTA", artist: "ARIJIT SINGH", src: "music/agent-vinod--saif-ali-khan-kareena-kapoorpritam.mp3", art: "photos/images.jpeg" },
+            { title: "JAANE TU YA JAANE NA", artist: "A.R RAHMAN & RASHID ALI", src: "music/jaane-tu-ya-jaane-na--ar-rahman--rashid-ali.mp3", art: "photos/Print_Interview_2005-32.webp" }
+        ];
+
+        let currentTrackIndex = 0;
+        let audio = new Audio(tracks[currentTrackIndex].src);
+        let isPlaying = false;
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const songTitle = document.getElementById('song-title');
+        const songArtist = document.getElementById('song-artist');
+        const albumArt = document.getElementById('album-art');
+        const playlist = document.getElementById('playlist');
+        const progress = document.getElementById('progress');
+        const progressBar = document.querySelector('.progress-bar');
+        const volumeSlider = document.getElementById('volume-slider');
+        const searchButton = document.getElementById('search-button');
+        const libraryButton = document.getElementById('library-button');
+
+        function updateSongDetails() {
+            songTitle.textContent = tracks[currentTrackIndex].title;
+            songArtist.textContent = tracks[currentTrackIndex].artist;
+            albumArt.src = tracks[currentTrackIndex].art;
+        }
+
+        function togglePlayPause() {
+            if (isPlaying) {
+                audio.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                audio.play();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function nextTrack() {
+            currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+            audio.src = tracks[currentTrackIndex].src;
+            updateSongDetails();
+            audio.play();
+            isPlaying = true;
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        }
+
+        function prevTrack() {
+            currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+            audio.src = tracks[currentTrackIndex].src;
+            updateSongDetails();
+            audio.play();
+            isPlaying = true;
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        }
+
+        function createPlaylist() {
+            tracks.forEach((track, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('playlist-item');
+                listItem.textContent = `${track.title} - ${track.artist}`;
+                listItem.addEventListener('click', () => {
+                    currentTrackIndex = index;
+                    audio.src = track.src;
+                    updateSongDetails();
+                    audio.play();
+                    isPlaying = true;
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                });
+                playlist.appendChild(listItem);
+            });
+        }
+
+        function updateProgress() {
+            progress.style.width = (audio.currentTime / audio.duration) * 100 + '%';
+        }
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('ended', nextTrack);
+
+        progressBar.addEventListener('click', (event) => {
+            audio.currentTime = (event.offsetX / progressBar.offsetWidth) * audio.duration;
+        });
+
+        volumeSlider.addEventListener('input', () => {
+            audio.volume = volumeSlider.value;
+        });
+
+        searchButton.addEventListener('click', () => {
+            const searchQuery = prompt("Enter song or artist name:").toLowerCase();
+            const filteredTracks = tracks.filter(track => track.title.toLowerCase().includes(searchQuery) || track.artist.toLowerCase().includes(searchQuery));
+            updatePlaylist(filteredTracks);
+        });
+
+        libraryButton.addEventListener('click', () => {
+            updatePlaylist(tracks.slice(0, 3));
+        });
+
+        function updatePlaylist(trackList) {
+            playlist.innerHTML = '';
+            trackList.forEach((track, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('playlist-item');
+                listItem.textContent = `${track.title} - ${track.artist}`;
+                listItem.addEventListener('click', () => {
+                    currentTrackIndex = tracks.indexOf(track);
+                    audio.src = track.src;
+                    updateSongDetails();
+                    audio.play();
+                    isPlaying = true;
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                });
+                playlist.appendChild(listItem);
+            });
+        }
+
+        updateSongDetails();
+        createPlaylist();
+
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        prevBtn.addEventListener('click', prevTrack);
+        nextBtn.addEventListener('click', nextTrack);
+    </script>
+</body>
+</html>
